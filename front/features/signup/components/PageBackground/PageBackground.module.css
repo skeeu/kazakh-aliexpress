@@ -1,0 +1,9 @@
+.wrapper {
+  background: url('../../assets/bg.svg');
+  background-position: center;
+  background-position-x: 99%;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  height: 100svh;
+}
