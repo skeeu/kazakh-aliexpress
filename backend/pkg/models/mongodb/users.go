@@ -1,4 +1,4 @@
-package mongo
+package mongodb
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func NewUserModel(c *mongo.Collection) *UserModel {
 
 func SendEmailWithCode(to, code string) error {
 	from := "dauka8@gmail.com"
-	password := "4F879FDE4719E4691106103A6054E8640B80"
+	password := "3142D1C955A5E76295E5A51E40ACA8C68616"
 	smtpHost := "smtp.elasticemail.com"
 	smtpPort := "2525"
 
@@ -40,6 +40,7 @@ func SendEmailWithCode(to, code string) error {
 	}
 
 	fmt.Println("Email sent successfully")
+	fmt.Println([]string{to})
 	return nil
 }
 
@@ -135,10 +136,6 @@ func (m *UserModel) SignUpConfirmCode(email, code string) (bool, error) {
 		return false, err
 	}
 
-	if isValid {
-
-	}
-
 	return isValid, nil
 }
 
@@ -148,4 +145,23 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 		return err
 	}
 
+	filter := bson.M{"email": email}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":           name,
+			"hashedPassword": hashedPassword,
+			"created":        time.Now(),
+			"role":           "buyer",
+		},
+	}
+
+	_, err = m.C.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
+
+//////////////////////// SIGN IN ////////////////////////////

@@ -11,11 +11,22 @@ var ErrInvalidCredentials = errors.New("models: invalid credentials")
 var ErrDuplicateEmail = errors.New("models: duplicate email")
 var ErrEmailDoesNotExist = errors.New("models: email does not exist")
 
+type OTP struct {
+	Code    string    `bson:"code"`
+	Expires time.Time `bson:"expires"`
+}
+
 type User struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	Email          string             `bson:"email"`
-	Name           string             `bson:"name"`
-	HashedPassword []byte             `bson:"hashedPassword"`
-	Created        time.Time          `bson:"created"`
-	Role           string             `bson:"role"`
+	ID             primitive.ObjectID   `bson:"_id,omitempty"`
+	Email          string               `bson:"email"`
+	Name           string               `bson:"name"`
+	HashedPassword []byte               `bson:"hashedPassword"`
+	Created        time.Time            `bson:"created"`
+	Role           string               `bson:"role"`
+	OTP            OTP                  `bson:"otp,omitempty"`
+	Cart           []primitive.ObjectID `bson:"cart,omitempty"`
+}
+
+type Item struct {
+	ID primitive.ObjectID `bson:"_id,omitempty"`
 }
