@@ -167,17 +167,24 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 
 //////////////////////// SIGN IN ////////////////////////////
 
-func (m *UserModel) CheckEmailByHashedPassword(email, password string) error {
+func (m *UserModel) Authenticate(email, password string) error {
 
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
 	if err != nil {
-		return err
+		if err == mongo.ErrNoDocuments {
+			return models.ErrInvalidCredentials
+		} else {
+			return err
+		}
 	}
 
 	err = bcrypt.CompareHashAndPassword(result.HashedPassword, []byte(password))
 	if err != nil {
-		return errors.New("incorrect password")
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return models.ErrInvalidCredentials
+		}
+		return err
 	}
 
 	return nil

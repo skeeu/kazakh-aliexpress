@@ -159,8 +159,8 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-	
-	err = app.users.CheckEmailByHashedPassword(req.Email, req.Password)
+
+	err = app.users.Authenticate(req.Email, req.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Incorrect email or password"})
