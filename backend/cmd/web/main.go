@@ -4,18 +4,20 @@ import (
 	"context"
 	"flag"
 	"github.com/golangcollege/sessions"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	mongoDB "kazakh-aliexpress/backend/pkg/models/mongodb"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
-	users    *mongo.Collection
+	users    *mongoDB.UserModel
 	session  *sessions.Session
 }
 
@@ -59,7 +61,7 @@ func main() {
 		infoLog:  infoLog,
 		errorLog: errorLog,
 		session:  session,
-		users:    db.Collection("users"),
+		users:    mongoDB.NewUserModel(db.Collection("users")),
 	}
 
 	srv := &http.Server{

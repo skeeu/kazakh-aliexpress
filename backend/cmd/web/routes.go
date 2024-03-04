@@ -14,5 +14,9 @@ func (app *application) routes() http.Handler {
 
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
 
+	// registration
+	mux.Get("/api/v1/signup/email", dynamicMiddleware.ThenFunc(app.signupEmail))
+	mux.Post("/api/v1/signup/email", dynamicMiddleware.ThenFunc(app.signupEmail))
+
 	return standardMiddleware.Then(mux)
 }
