@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -165,3 +166,19 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 }
 
 //////////////////////// SIGN IN ////////////////////////////
+
+func (m *UserModel) CheckEmailByHashedPassword(email, password string) error {
+
+	var result models.User
+	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
+	if err != nil {
+		return err
+	}
+
+	err = bcrypt.CompareHashAndPassword(result.HashedPassword, []byte(password))
+	if err != nil {
+		return errors.New("incorrect password")
+	}
+
+	return nil
+}

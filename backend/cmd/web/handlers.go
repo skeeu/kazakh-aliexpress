@@ -138,3 +138,40 @@ func (app *application) signupFinish(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Signup successful"})
 }
+
+func (app *application) login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = validation.ValidateStruct(&req,
+		validation.Field(&req.Email, validation.Required, validation.Length(5, 100), is.Email),
+		validation.Field(&req.Password, validation.Required, validation.Length(5, 30)),
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	
+	err = app.users.CheckEmailByHashedPassword(req.Email, req.Password)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Incorrect email or password"})
+		return
+	}
+
+	jwt, err := app.generateJWTsignIn(req.Email)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"Token": jwt})
+}
