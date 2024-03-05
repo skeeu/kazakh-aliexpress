@@ -6,16 +6,12 @@ import (
 	"net/http"
 )
 
-type JWTClaims struct {
-	jwt.StandardClaims
-}
-
 // no access for signup/login by authenticated users
 func (app *application) requireNoXAuthJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("X-Auth")
 		if tokenString != "" {
-			token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.ParseWithClaims(tokenString, &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
 			})
 
@@ -37,7 +33,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		claims := &JWTClaims{}
+		claims := &AppClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
