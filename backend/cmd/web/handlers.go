@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -84,7 +85,7 @@ func (app *application) showItem(w http.ResponseWriter, r *http.Request) {
 	i, err := app.items.GetItem(itemId)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			app.notFound(w)
 		} else {
 			app.serverError(w, err)
@@ -126,7 +127,7 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	err = app.users.CheckEmail(req.Email)
 	if err != nil {
-		if err == models.ErrDuplicateEmail {
+		if errors.Is(err, models.ErrDuplicateEmail) {
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Email already in use"})
 		} else {

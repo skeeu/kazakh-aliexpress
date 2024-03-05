@@ -23,7 +23,7 @@ func (m *UserModel) IsEmailExists(email string) (bool, error) {
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return false, nil
 		}
 		return false, err
@@ -78,7 +78,7 @@ func (m *UserModel) Authenticate(email, password string) error {
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return models.ErrInvalidCredentials
 		} else {
 			return err
