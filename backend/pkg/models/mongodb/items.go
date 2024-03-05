@@ -16,9 +16,11 @@ func NewItemModel(c *mongo.Collection) *ItemModel {
 	return &ItemModel{C: c}
 }
 
-func (m *ItemModel) GetItemsByCategoryName(categoryName string) ([]*models.Item, error) {
+func (m *ItemModel) GetItemsByCategoryName(categoryName string, page, pageSize int) ([]*models.Item, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	skip := (page - 1) * pageSize
 
 	matchStage := bson.D{
 		{"$match", bson.D{
@@ -28,7 +30,10 @@ func (m *ItemModel) GetItemsByCategoryName(categoryName string) ([]*models.Item,
 		}},
 	}
 
-	cursor, err := m.C.Aggregate(ctx, mongo.Pipeline{matchStage})
+	skipStage := bson.D{{"$skip", skip}}
+	limitStage := bson.D{{"$limit", pageSize}}
+
+	cursor, err := m.C.Aggregate(ctx, mongo.Pipeline{matchStage, skipStage, limitStage})
 	if err != nil {
 		return nil, models.ErrNoRecord
 	}
