@@ -14,9 +14,10 @@ import (
 )
 
 type application struct {
-	infoLog  *log.Logger
-	errorLog *log.Logger
-	users    *mongoDB.UserModel
+	infoLog    *log.Logger
+	errorLog   *log.Logger
+	users      *mongoDB.UserModel
+	categories *mongoDB.CategoryModel
 }
 
 func main() {
@@ -47,9 +48,10 @@ func main() {
 	db := client.Database("Qazaq-Aliexpress")
 
 	app := &application{
-		infoLog:  infoLog,
-		errorLog: errorLog,
-		users:    mongoDB.NewUserModel(db.Collection("users")),
+		infoLog:    infoLog,
+		errorLog:   errorLog,
+		users:      mongoDB.NewUserModel(db.Collection("users")),
+		categories: mongoDB.NewCategoryModel(db.Collection("categories")),
 	}
 
 	srv := &http.Server{

@@ -27,6 +27,11 @@ type User struct {
 	Cart           []primitive.ObjectID `bson:"cart,omitempty"`
 }
 
+type Category struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	CategoryName string             `bson:"category_name"`
+}
+
 type Item struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 }
