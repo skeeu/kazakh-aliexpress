@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/golangcollege/sessions"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	mongoDB "kazakh-aliexpress/backend/pkg/models/mongodb"
 	"log"
@@ -18,7 +17,6 @@ type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
 	users    *mongoDB.UserModel
-	session  *sessions.Session
 }
 
 func main() {
@@ -26,9 +24,6 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP networks address")
 	mongoURI := flag.String("mongoURI", "mongodb+srv://thedakeen:bYOC9DgDKO1zBIfR@cluster0.jbvthwy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", "MongoDB URI")
 
-	flag.Parse()
-
-	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -54,13 +49,9 @@ func main() {
 
 	db := client.Database("Qazaq-Aliexpress")
 
-	session := sessions.New([]byte(*secret))
-	session.Lifetime = 12 * time.Hour
-
 	app := &application{
 		infoLog:  infoLog,
 		errorLog: errorLog,
-		session:  session,
 		users:    mongoDB.NewUserModel(db.Collection("users")),
 	}
 

@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -19,4 +21,56 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+func (app *application) generateJWTsignUp(email string) (string, error) {
+	expirationTime := time.Now().Add(12 * time.Minute)
+
+	claims := &jwt.StandardClaims{
+		Subject:   email,
+		ExpiresAt: expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte("s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"))
+
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func (app *application) getEmailFromSignUpToken(tokenString string) (string, error) {
+	claims := &jwt.StandardClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", err
+	}
+
+	return claims.Subject, nil
+}
+
+/////////////////////////////////////////////////
+
+func (app *application) generateJWTsignIn(email string) (string, error) {
+	expirationTime := time.Now().Add(12 * time.Hour)
+
+	claims := &jwt.StandardClaims{
+		Subject:   email,
+		ExpiresAt: expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"))
+
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
