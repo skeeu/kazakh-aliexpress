@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
@@ -10,9 +11,10 @@ import (
 func (app *application) requireNoXAuthJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("X-Auth")
+		claims := &AppClaims{}
 		if tokenString != "" {
-			token, err := jwt.ParseWithClaims(tokenString, &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
-				return []byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
+			token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"), nil
 			})
 
 			if err == nil && token.Valid {
@@ -27,6 +29,7 @@ func (app *application) requireNoXAuthJWT(next http.Handler) http.Handler {
 // check if user authenticated (e.g. access for cart)
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		tokenString := r.Header.Get("X-Auth")
 		if tokenString == "" {
 			app.clientError(w, http.StatusUnauthorized)
@@ -38,14 +41,18 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return []byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
+			return []byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"), nil
 		})
 
 		if err != nil || !token.Valid {
 			app.clientError(w, http.StatusForbidden)
 			return
 		}
+
+		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+
 }
 
 //////////////////////////////////////////////////////////////

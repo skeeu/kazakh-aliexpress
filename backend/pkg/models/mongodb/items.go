@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -103,6 +104,30 @@ func (m *ItemModel) GetItem(id string) (*models.Item, error) {
 	return item, nil
 }
 
+
+func (m *ItemModel) ItemExists(itemId primitive.ObjectID) (bool, error) {
+	var result bson.M
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := m.C.FindOne(ctx, bson.M{"_id": itemId}).Decode(&result)
+
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (m *ItemModel) FindByID(itemId primitive.ObjectID) (*models.Item, error) {
+	var item *models.Item
+	err := m.C.FindOne(context.TODO(), bson.M{"_id": itemId}).Decode(&item)
+	return item, err
+
+
 func (m *ItemModel) GetItems(page, pageSize int) ([]*models.Item, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -121,4 +146,5 @@ func (m *ItemModel) GetItems(page, pageSize int) ([]*models.Item, error) {
 	}
 
 	return items, nil
+
 }

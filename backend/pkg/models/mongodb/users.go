@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
@@ -19,6 +20,14 @@ func NewUserModel(c *mongo.Collection) *UserModel {
 	return &UserModel{C: c}
 }
 
+func (m *UserModel) AddItemToCart(userId primitive.ObjectID, item *models.Item) error {
+	filter := bson.M{"_id": userId}
+	update := bson.M{"$push": bson.M{"cart": item}}
+	_, err := m.C.UpdateOne(context.TODO(), filter, update)
+	return err
+}
+
+// ////////////////////////////////////////////////////////////////////
 func (m *UserModel) IsEmailExists(email string) (bool, error) {
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
@@ -59,6 +68,7 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 			"hashedPassword": hashedPassword,
 			"created":        time.Now(),
 			"role":           "buyer",
+			"cart":           []interface{}{},
 		},
 	}
 	opts := options.Update().SetUpsert(true)

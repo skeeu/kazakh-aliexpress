@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"kazakh-aliexpress/backend/pkg/models"
 	"log"
@@ -16,6 +17,73 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home page"))
 }
+
+// /////////////////////// CART LOGIC /////////////////////////////
+func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received addToCart request")
+	userId, ok := r.Context().Value("userID").(string)
+	log.Printf("UserID from context: %s", userId)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	//userId = r.URL.Query().Get(":userId")
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	item, err := app.items.FindByID(itemOBJId)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	exists, err := app.items.ItemExists(itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if !exists {
+		app.notFound(w)
+		return
+	}
+
+	if err = app.users.AddItemToCart(userOBJId, item); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Item added to cart"})
+}
+
+///////////////////////// END OF CART LOGIC /////////////////////////////
 
 ///////////////////////// CATEGORIES LOGIC /////////////////////////////
 
@@ -298,8 +366,6 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jwt, err := app.generateJWTsignIn(userId, req.Email, userRole)
-	log.Printf(userId)
-	log.Printf(userRole)
 	if err != nil {
 		app.serverError(w, err)
 		return
