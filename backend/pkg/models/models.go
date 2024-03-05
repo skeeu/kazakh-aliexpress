@@ -24,7 +24,7 @@ type User struct {
 	Created        time.Time          `bson:"created"`
 	Role           string             `bson:"role"`
 	OTP            OTP                `bson:"otp,omitempty"`
-	Cart           []Item             `bson:"cart,omitempty"`
+	Cart           []Item             `bson:"cart"`
 }
 
 type OTPs struct {

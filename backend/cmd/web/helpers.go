@@ -76,7 +76,7 @@ func (app *application) generateJWTsignIn(userId, email, role string) (string, e
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"))
+	tokenString, err := token.SignedString([]byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"))
 
 	if err != nil {
 		return "", err
