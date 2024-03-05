@@ -43,9 +43,6 @@ func main() {
 	if err := client.Ping(context.TODO(), nil); err != nil {
 		errorLog.Fatal(err)
 	}
-	//else {
-	//	fmt.Println("Connected to mongodb")
-	//}
 
 	db := client.Database("Qazaq-Aliexpress")
 

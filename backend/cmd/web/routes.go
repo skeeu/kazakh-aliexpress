@@ -18,5 +18,8 @@ func (app *application) routes() http.Handler {
 	mux.Post("/api/v1/signup/email", dynamicMiddleware.ThenFunc(app.signupEmail))
 	mux.Post("/api/v1/signup/code", dynamicMiddleware.ThenFunc(app.signupCode))
 	mux.Post("/api/v1/signup", dynamicMiddleware.ThenFunc(app.signupFinish))
+
+	mux.Post("/api/v1/login", dynamicMiddleware.ThenFunc(app.login))
+
 	return standardMiddleware.Then(mux)
 }
