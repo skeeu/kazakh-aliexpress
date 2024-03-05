@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"kazakh-aliexpress/backend/pkg/models"
 	"time"
@@ -45,4 +46,23 @@ func (m *ItemModel) GetItemsByCategoryName(categoryName string, page, pageSize i
 	}
 
 	return items, nil
+}
+
+func (m *ItemModel) GetItem(id string) (*models.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var item *models.Item
+
+	err = m.C.FindOne(ctx, bson.M{"_id": objID}).Decode(&item)
+	if err != nil {
+		return nil, err
+	}
+
+	return item, nil
 }

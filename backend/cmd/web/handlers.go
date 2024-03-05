@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"go.mongodb.org/mongo-driver/mongo"
 	"kazakh-aliexpress/backend/pkg/models"
 	"log"
 	"net/http"
@@ -75,7 +76,34 @@ func (app *application) showCategory(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// /////////////////////// END OF CATEGORIES LOGIC /////////////////////////////////
+////////////////////////// END OF CATEGORIES LOGIC /////////////////////////////////
+
+func (app *application) showItem(w http.ResponseWriter, r *http.Request) {
+	itemId := r.URL.Query().Get(":itemId")
+
+	i, err := app.items.GetItem(itemId)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+			return
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(i)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
+////////////////////////// AUTH LOGIC /////////////////////////////////
+
 func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email string `json:"email"`
