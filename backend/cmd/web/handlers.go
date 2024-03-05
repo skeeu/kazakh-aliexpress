@@ -138,3 +138,8 @@ func (app *application) signupFinish(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Signup successful"})
 }
+
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Authenticate and login the user...")
+}
