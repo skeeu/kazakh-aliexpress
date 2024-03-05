@@ -251,15 +251,16 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId, err := app.users.Authenticate(req.Email, req.Password)
+	userId, userRole, err := app.users.Authenticate(req.Email, req.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Incorrect email or password"})
 		return
 	}
 
-	jwt, err := app.generateJWTsignIn(userId, req.Email)
+	jwt, err := app.generateJWTsignIn(userId, req.Email, userRole)
 	log.Printf(userId)
+	log.Printf(userRole)
 	if err != nil {
 		app.serverError(w, err)
 		return

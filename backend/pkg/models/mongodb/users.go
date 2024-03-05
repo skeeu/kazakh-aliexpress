@@ -73,25 +73,25 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 
 //////////////////////// SIGN IN ////////////////////////////
 
-func (m *UserModel) Authenticate(email, password string) (string, error) {
+func (m *UserModel) Authenticate(email, password string) (string, string, error) {
 
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return "", models.ErrInvalidCredentials
+			return "", "", models.ErrInvalidCredentials
 		} else {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	err = bcrypt.CompareHashAndPassword(result.HashedPassword, []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return "", models.ErrInvalidCredentials
+			return "", "", models.ErrInvalidCredentials
 		}
-		return "", err
+		return "", "", err
 	}
 
-	return result.ID.Hex(), nil
+	return result.ID.Hex(), result.Role, nil
 }

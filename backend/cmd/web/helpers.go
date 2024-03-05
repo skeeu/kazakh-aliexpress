@@ -60,14 +60,16 @@ type AppClaims struct {
 	jwt.StandardClaims
 	UserID string `json:"userId"`
 	Email  string `json:"email"`
+	Role   string `json:"role"`
 }
 
-func (app *application) generateJWTsignIn(userId, email string) (string, error) {
+func (app *application) generateJWTsignIn(userId, email, role string) (string, error) {
 	expirationTime := time.Now().Add(12 * time.Hour)
 
 	claims := &AppClaims{
 		UserID: userId,
 		Email:  email,
+		Role:   role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
