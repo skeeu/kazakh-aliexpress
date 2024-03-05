@@ -23,6 +23,7 @@ func (app *application) routes() http.Handler {
 	mux := pat.New()
 
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
+	mux.Get("/api/v1/categories", dynamicMiddleware.ThenFunc(app.showAllCategories))
 
 	// registration
 	mux.Post("/api/v1/signup/email", dynamicMiddleware.Append(app.requireNoXAuthJWT).ThenFunc(app.signupEmail))

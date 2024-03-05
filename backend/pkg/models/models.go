@@ -33,6 +33,11 @@ type OTPs struct {
 	OTP   OTP                `bson:"otp,omitempty"`
 }
 
+type Category struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty"`
+	CategoryName string             `bson:"category_name"`
+}
+
 type Item struct {
 	ID primitive.ObjectID `bson:"_id,omitempty"`
 }

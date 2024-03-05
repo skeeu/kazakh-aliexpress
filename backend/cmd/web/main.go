@@ -18,6 +18,7 @@ type application struct {
 	errorLog *log.Logger
 	users    *mongoDB.UserModel
 	otps     *mongoDB.OtpModel
+	categories *mongoDB.CategoryModel
 }
 
 func main() {
@@ -50,8 +51,11 @@ func main() {
 	app := &application{
 		infoLog:  infoLog,
 		errorLog: errorLog,
-		users:    mongoDB.NewUserModel(db.Collection("users")),
 		otps:     mongoDB.NewOtpModel(db.Collection("otps")),
+		infoLog:    infoLog,
+		errorLog:   errorLog,
+		users:      mongoDB.NewUserModel(db.Collection("users")),
+		categories: mongoDB.NewCategoryModel(db.Collection("categories")),
 	}
 
 	srv := &http.Server{

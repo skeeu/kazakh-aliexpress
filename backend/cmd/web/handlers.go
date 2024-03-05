@@ -13,6 +13,23 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home page"))
 }
 
+func (app *application) showAllCategories(w http.ResponseWriter, r *http.Request) {
+	c, err := app.categories.GetAll()
+
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(c)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
 func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email string `json:"email"`
@@ -50,6 +67,7 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
