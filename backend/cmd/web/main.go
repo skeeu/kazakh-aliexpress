@@ -19,6 +19,7 @@ type application struct {
 	users    *mongoDB.UserModel
 	otps     *mongoDB.OtpModel
 	categories *mongoDB.CategoryModel
+	items      *mongoDB.ItemModel
 }
 
 func main() {
@@ -56,6 +57,7 @@ func main() {
 		errorLog:   errorLog,
 		users:      mongoDB.NewUserModel(db.Collection("users")),
 		categories: mongoDB.NewCategoryModel(db.Collection("categories")),
+		items:      mongoDB.NewItemModel(db.Collection("items")),
 	}
 
 	srv := &http.Server{

@@ -52,3 +52,14 @@ func (m *CategoryModel) GetAll() ([]*models.Category, error) {
 
 	return categories, nil
 }
+
+func (m *CategoryModel) CategoryExists(categoryName string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := m.C.CountDocuments(ctx, bson.M{"category_name": categoryName})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
