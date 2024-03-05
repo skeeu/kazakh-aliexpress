@@ -9,7 +9,6 @@ const Page: React.FC<PropsWithChildren<PageProps>> = ({ children, bottomNavigati
         <AppShell
             header={{ height: 60 }}
             footer={{ height: 60 }}
-            padding="md"
         >
             {header && <AppShell.Header>{header}</AppShell.Header>}
             {children}

@@ -1,0 +1,17 @@
+.indicators {
+    bottom: -1rem !important;
+}
+
+.indicator {
+    width: 7px !important;
+    height: 7px !important;
+    transition: width 250ms ease;
+    background-color: #005bff;
+    border-radius: 9999px;
+
+    &[data-active] {
+        border-radius: 9999px;
+        height: 7px;
+        width: 7px;
+    }
+}
