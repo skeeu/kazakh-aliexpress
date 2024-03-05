@@ -14,9 +14,10 @@ import (
 )
 
 type application struct {
-	infoLog    *log.Logger
-	errorLog   *log.Logger
-	users      *mongoDB.UserModel
+	infoLog  *log.Logger
+	errorLog *log.Logger
+	users    *mongoDB.UserModel
+	otps     *mongoDB.OtpModel
 	categories *mongoDB.CategoryModel
 }
 
@@ -48,6 +49,9 @@ func main() {
 	db := client.Database("Qazaq-Aliexpress")
 
 	app := &application{
+		infoLog:  infoLog,
+		errorLog: errorLog,
+		otps:     mongoDB.NewOtpModel(db.Collection("otps")),
 		infoLog:    infoLog,
 		errorLog:   errorLog,
 		users:      mongoDB.NewUserModel(db.Collection("users")),

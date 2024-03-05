@@ -50,8 +50,7 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
-
-	err = app.users.SignUpEmail(req.Email)
+	err = app.users.CheckEmail(req.Email)
 	if err != nil {
 		if err == models.ErrDuplicateEmail {
 			w.WriteHeader(http.StatusConflict)
@@ -61,7 +60,7 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
+	err = app.otps.SignUpEmail(req.Email)
 	tokenString, err := app.generateJWTsignUp(req.Email)
 	if err != nil {
 		app.serverError(w, err)
@@ -70,7 +69,6 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
-
 }
 
 func (app *application) signupCode(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +94,7 @@ func (app *application) signupCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isValid, err := app.users.SignUpConfirmCode(email, req.Code)
+	isValid, err := app.otps.SignUpConfirmCode(email, req.Code)
 	if err != nil {
 		app.serverError(w, err)
 		return

@@ -27,6 +27,12 @@ type User struct {
 	Cart           []primitive.ObjectID `bson:"cart,omitempty"`
 }
 
+type OTPs struct {
+	ID    primitive.ObjectID `bson:"_id,omitempty"`
+	Email string             `bson:"email"`
+	OTP   OTP                `bson:"otp,omitempty"`
+}
+
 type Category struct {
 	ID           primitive.ObjectID `bson:"_id,omitempty"`
 	CategoryName string             `bson:"category_name"`
