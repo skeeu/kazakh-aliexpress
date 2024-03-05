@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"kazakh-aliexpress/backend/pkg/models"
@@ -58,6 +59,21 @@ func (m *CategoryModel) CategoryExists(categoryName string) (bool, error) {
 	defer cancel()
 
 	count, err := m.C.CountDocuments(ctx, bson.M{"category_name": categoryName})
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (m *CategoryModel) CategoryExistsById(category_id string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objID, err := primitive.ObjectIDFromHex(category_id)
+	if err != nil {
+		return false, err
+	}
+	count, err := m.C.CountDocuments(ctx, bson.M{"_id": objID})
 	if err != nil {
 		return false, err
 	}
