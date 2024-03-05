@@ -104,7 +104,6 @@ func (m *ItemModel) GetItem(id string) (*models.Item, error) {
 	return item, nil
 }
 
-
 func (m *ItemModel) ItemExists(itemId primitive.ObjectID) (bool, error) {
 	var result bson.M
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -127,6 +126,7 @@ func (m *ItemModel) FindByID(itemId primitive.ObjectID) (*models.Item, error) {
 	err := m.C.FindOne(context.TODO(), bson.M{"_id": itemId}).Decode(&item)
 	return item, err
 
+}
 
 func (m *ItemModel) GetItems(page, pageSize int) ([]*models.Item, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
