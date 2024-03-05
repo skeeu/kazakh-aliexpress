@@ -41,6 +41,6 @@ type Category struct {
 type Item struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Categories []Category         `bson:"categories,omitempty"`
-	Price      float64            `bson:"price,omitempty"`
+	Price      float64            `bson:"price"`
 	ItemName   string             `bson:"item_name"`
 }

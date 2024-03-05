@@ -5,8 +5,10 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"kazakh-aliexpress/backend/pkg/models"
+	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +40,15 @@ func (app *application) showCategory(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
+	log.Printf("Requested category: %s", categoryName)
+
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize := 10
 
 	exists, err := app.categories.CategoryExists(categoryName)
 	if err != nil {
@@ -49,7 +60,7 @@ func (app *application) showCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i, err := app.items.GetItemsByCategoryName(categoryName)
+	i, err := app.items.GetItemsByCategoryName(categoryName, page, pageSize)
 	if err != nil {
 		app.serverError(w, err)
 		return
