@@ -2,8 +2,55 @@ package main
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 )
+
+type JWTClaims struct {
+	jwt.StandardClaims
+}
+
+// no access for signup/login by authenticated users
+func (app *application) requireNoXAuthJWT(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenString := r.Header.Get("X-Auth")
+		if tokenString != "" {
+			token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+				return []byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
+			})
+
+			if err == nil && token.Valid {
+				app.clientError(w, http.StatusForbidden)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// check if user authenticated (e.g. access for cart)
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenString := r.Header.Get("X-Auth")
+		if tokenString == "" {
+			app.clientError(w, http.StatusUnauthorized)
+			return
+		}
+
+		claims := &JWTClaims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte("s7Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge"), nil
+		})
+
+		if err != nil || !token.Valid {
+			app.clientError(w, http.StatusForbidden)
+			return
+		}
+	})
+}
 
 //////////////////////////////////////////////////////////////
 
