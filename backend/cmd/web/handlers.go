@@ -171,6 +171,45 @@ func (app *application) showItem(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *application) showItems(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	pageSize := 10
+
+	var i []*models.Item
+	category_id := r.URL.Query().Get("category_id")
+
+	exists, err := app.categories.CategoryExistsById(category_id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if exists {
+		i, err = app.items.GetItemsByCategoryId(category_id, page, pageSize)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	} else {
+		i, err = app.items.GetItems(page, pageSize)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(i)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
 ////////////////////////// AUTH LOGIC /////////////////////////////////
 
 func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {

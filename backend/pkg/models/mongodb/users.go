@@ -105,3 +105,4 @@ func (m *UserModel) Authenticate(email, password string) (string, string, error)
 
 	return result.ID.Hex(), result.Role, nil
 }
+
