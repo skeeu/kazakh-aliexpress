@@ -13,6 +13,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home page"))
 }
 
+///////////////////////// CATEGORIES LOGIC /////////////////////////////
+
 func (app *application) showAllCategories(w http.ResponseWriter, r *http.Request) {
 	c, err := app.categories.GetAll()
 
@@ -30,6 +32,39 @@ func (app *application) showAllCategories(w http.ResponseWriter, r *http.Request
 	}
 }
 
+func (app *application) showCategory(w http.ResponseWriter, r *http.Request) {
+	categoryName := r.URL.Query().Get(":name")
+	if categoryName == "" {
+		app.notFound(w)
+		return
+	}
+
+	exists, err := app.categories.CategoryExists(categoryName)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if !exists {
+		app.notFound(w)
+		return
+	}
+
+	i, err := app.items.GetItemsByCategoryName(categoryName)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(i)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
+// /////////////////////// END OF CATEGORIES LOGIC /////////////////////////////////
 func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email string `json:"email"`
