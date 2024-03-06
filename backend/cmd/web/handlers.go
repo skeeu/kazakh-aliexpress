@@ -27,13 +27,17 @@ func (app *application) showFavs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	userOBJId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	items, err := app.users.GetFavorites(userOBJId)
 	if err != nil {
@@ -58,6 +62,12 @@ func (app *application) addToFav(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -78,8 +88,6 @@ func (app *application) addToFav(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	exists, err := app.items.ItemExists(itemOBJId)
 	if err != nil {
@@ -116,6 +124,12 @@ func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -135,8 +149,6 @@ func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	deleted, err := app.users.DeleteItemFromFavorites(userOBJId, itemOBJId)
 	if err != nil {
@@ -167,13 +179,17 @@ func (app *application) showCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	userOBJId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	items, err := app.users.GetCart(userOBJId)
 	if err != nil {
@@ -197,6 +213,11 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusUnauthorized)
 		return
 	}
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
 
 	var req struct {
 		ItemId string `json:"itemId"`
@@ -212,8 +233,6 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
 	if err != nil {
@@ -250,6 +269,12 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -264,8 +289,6 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
 	if err != nil {
