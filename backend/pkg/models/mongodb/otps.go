@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -72,6 +73,7 @@ func (m *OtpModel) SignUpEmail(email string) error {
 		"$set": bson.M{
 			"otp.code":    code,
 			"otp.expires": expires,
+			"verified":    false,
 		},
 	}
 
@@ -95,23 +97,45 @@ func (m *OtpModel) SignUpConfirmCode(email, code string) (bool, error) {
 		return false, err
 	}
 
+	opts := options.Update().SetUpsert(true)
+	filter := bson.M{"email": email}
+	update := bson.M{
+		"$set": bson.M{
+			"verified": true,
+		},
+	}
+	_, err = m.C.UpdateOne(context.Background(), filter, update, opts)
+	if err != nil {
+		return false, err
+	}
+
 	return isValid, nil
 }
 
 func (m *OtpModel) CheckCode(email, code string) (bool, error) {
-	var user models.OTPs
-	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
+	var otpRecord models.OTPs
+	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&otpRecord)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return false, nil
 		}
 		return false, err
 	}
 
-	if user.OTP.Code == code && user.OTP.Expires.After(time.Now()) {
+	if otpRecord.OTP.Code == code && otpRecord.OTP.Expires.After(time.Now()) {
 		return true, nil
 	}
 
 	return false, nil
+}
+
+func (m *OtpModel) IsEmailVerified(email string) (bool, error) {
+	var otpRecord models.OTPs
+	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&otpRecord)
+	if err != nil {
+		return false, err
+	}
+
+	return otpRecord.Verified, nil
 }

@@ -32,9 +32,10 @@ type User struct {
 }
 
 type OTPs struct {
-	ID    primitive.ObjectID `bson:"_id,omitempty"`
-	Email string             `bson:"email"`
-	OTP   OTP                `bson:"otp,omitempty"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	Email    string             `bson:"email"`
+	OTP      OTP                `bson:"otp,omitempty"`
+	Verified bool               `bson:"verified"`
 }
 
 type Category struct {
