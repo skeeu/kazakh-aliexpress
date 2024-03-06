@@ -42,10 +42,18 @@ type Category struct {
 	CategoryName string             `bson:"category_name"`
 }
 
+type Review struct {
+	ID      primitive.ObjectID `bson:"_id,omitempty"`
+	UserId  primitive.ObjectID `bson:"user_id,omitempty"`
+	Rating  float64            `bson:"rating"`
+	Comment string             `bson:"comment"`
+}
+
 type Item struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Categories []Category         `bson:"categories,omitempty"`
 	Price      float64            `bson:"price"`
 	ItemName   string             `bson:"item_name"`
 	Photos     []string           `bson:"item_photos"`
+	Reviews    []Review           `bson:"reviews"`
 }

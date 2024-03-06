@@ -84,3 +84,17 @@ func (app *application) generateJWTsignIn(userId, email, role string) (string, e
 
 	return tokenString, nil
 }
+
+func (app *application) getDataFromToken(tokenString string) (string, error) {
+	claims := &jwt.StandardClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"), nil
+	})
+
+	if err != nil || !token.Valid {
+		return "", err
+	}
+
+	return claims.Subject, nil
+}
