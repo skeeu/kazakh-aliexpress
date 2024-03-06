@@ -27,14 +27,11 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/categories/:name", dynamicMiddleware.ThenFunc(app.showCategory))
 	mux.Get("/api/v1/item/:itemId", dynamicMiddleware.ThenFunc(app.showItem))
 
-	
-	mux.Post("/api/v1/cart/add", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
-	mux.Post("/api/v1/cart/remove", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromCart))
-
+	mux.Patch("/api/v1/cart/add", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
+	mux.Del("/api/v1/cart/remove", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromCart))
 
 	mux.Get("/api/v1/items", dynamicMiddleware.ThenFunc(app.showItems))
-  mux.Post("/api/v1/items/add", dynamicMiddleware.Append(app.IsSeller).ThenFunc(app.AddItem))
-
+	mux.Post("/api/v1/items/add", dynamicMiddleware.Append(app.IsSeller).ThenFunc(app.AddItem))
 
 	// registration
 	mux.Post("/api/v1/signup/email", dynamicMiddleware.Append(app.requireNoXAuthJWT).ThenFunc(app.signupEmail))
