@@ -441,7 +441,7 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		ItemName   string          `json:"item_name"`
 		Photos     []string        `json:"item_photos"`
 		Infos      []models.Info   `json:"info"`
-		Options    []models.Option `json:"option"`
+		Options    []models.Option `json:"options"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {

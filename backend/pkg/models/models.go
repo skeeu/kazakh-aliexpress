@@ -53,7 +53,7 @@ type Item struct {
 	Photos     []string           `bson:"item_photos"`
 	Reviews    []Review           `bson:"reviews"`
 	Infos      []Info             `bson:"info"`
-	Options    []Option           `bson:"option"`
+	Options    []Option           `bson:"options"`
 }
 type Review struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty"`
