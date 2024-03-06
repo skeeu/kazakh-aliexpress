@@ -26,6 +26,8 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/categories", dynamicMiddleware.ThenFunc(app.showAllCategories))
 	mux.Get("/api/v1/categories/:name", dynamicMiddleware.ThenFunc(app.showCategory))
 	mux.Get("/api/v1/item/:itemId", dynamicMiddleware.ThenFunc(app.showItem))
+	mux.Post("/api/v1/items/:itemId/reviews", dynamicMiddleware.ThenFunc(app.AddReview))
+
 
 	mux.Get("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.showCart))
 	mux.Patch("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
@@ -34,6 +36,7 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.showFavs))
 	mux.Post("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToFav))
 	mux.Del("/api/v1/users/:userId/favorites/:itemId", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromFav))
+
 
 	mux.Get("/api/v1/items", dynamicMiddleware.ThenFunc(app.showItems))
 	mux.Post("/api/v1/items/add", dynamicMiddleware.Append(app.IsSeller).ThenFunc(app.AddItem))

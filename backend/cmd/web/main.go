@@ -20,6 +20,7 @@ type application struct {
 	otps       *mongoDB.OtpModel
 	categories *mongoDB.CategoryModel
 	items      *mongoDB.ItemModel
+	reviews    *mongoDB.ReviewModel
 }
 
 func main() {
@@ -56,6 +57,7 @@ func main() {
 		users:      mongoDB.NewUserModel(db.Collection("users"), db.Collection("items")),
 		categories: mongoDB.NewCategoryModel(db.Collection("categories")),
 		items:      mongoDB.NewItemModel(db.Collection("items")),
+		reviews:    mongoDB.NewReviewModel(db.Collection("reviews")),
 	}
 
 	srv := &http.Server{

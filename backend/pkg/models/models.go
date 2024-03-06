@@ -57,7 +57,7 @@ type Item struct {
 }
 type Review struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty"`
-	UserId  primitive.ObjectID `bson:"user_id,omitempty"`
+	UserId  primitive.ObjectID `bson:"user_id"`
 	Rating  float64            `bson:"rating"`
 	Comment string             `bson:"comment"`
 }

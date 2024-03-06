@@ -54,9 +54,11 @@ func (app *application) generateJWTsignIn(userId, email, role string) (string, e
 }
 
 func (app *application) getDataFromToken(tokenString string) (string, error) {
-	claims := &jwt.StandardClaims{}
-
+	claims := &AppClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return []byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"), nil
 	})
 
@@ -64,5 +66,5 @@ func (app *application) getDataFromToken(tokenString string) (string, error) {
 		return "", err
 	}
 
-	return claims.Subject, nil
+	return claims.UserID, nil
 }

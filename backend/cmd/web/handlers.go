@@ -481,12 +481,69 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		}
 		categories = append(categories, c)
 	}
+
 	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos, req.Infos, req.Options)
 	if err != nil {
 		app.serverError(w, err)
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": `successfully added`})
+}
+
+////////////////////////// REVIEW /////////////////////////////////
+
+func (app *application) AddReview(w http.ResponseWriter, r *http.Request) {
+	itemId := r.URL.Query().Get(":itemId")
+	var req struct {
+		Rating  float64 `json:"rating"`
+		Comment string  `json:"comment"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = validation.ValidateStruct(&req,
+		validation.Field(&req.Rating, validation.Required, validation.Min(1.0), validation.Max(5.0)),
+		validation.Field(&req.Comment, validation.Required))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	tokenString := r.Header.Get("X-Auth")
+
+	user_id, err := app.getDataFromToken(tokenString)
+	if err != nil {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	obj_user_ID, err := primitive.ObjectIDFromHex(user_id)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	id, err := app.reviews.CreateReview(obj_user_ID, req.Rating, req.Comment)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	review := &models.Review{
+		ID:      id.(primitive.ObjectID),
+		UserId:  obj_user_ID,
+		Rating:  req.Rating,
+		Comment: req.Comment,
+	}
+
+	err = app.items.AddReview(review, itemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": `successfully created`})
 }
 
 ////////////////////////// AUTH LOGIC /////////////////////////////////
