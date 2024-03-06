@@ -19,6 +19,37 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 // /////////////////////// FAVORITES LOGIC /////////////////////////////
+
+func (app *application) showFavs(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userId = r.URL.Query().Get(":userId")
+
+	items, err := app.users.GetFavorites(userOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(items)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
 func (app *application) addToFav(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("userID").(string)
 

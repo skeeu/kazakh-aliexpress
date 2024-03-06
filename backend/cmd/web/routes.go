@@ -30,6 +30,7 @@ func (app *application) routes() http.Handler {
 	mux.Patch("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
 	mux.Del("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromCart))
 
+	mux.Get("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.showFavs))
 	mux.Post("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToFav))
 	mux.Del("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromFav))
 
