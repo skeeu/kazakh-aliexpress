@@ -29,6 +29,7 @@ type User struct {
 	Created        time.Time          `bson:"created"`
 	Role           string             `bson:"role"`
 	OTP            OTP                `bson:"otp,omitempty"`
+	Favorites      []Item             `bson:"favorites,omitempty"`
 	Cart           []CartItem         `bson:"cart,omitempty"`
 }
 

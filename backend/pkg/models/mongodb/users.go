@@ -24,6 +24,47 @@ func NewUserModel(usersCollection, itemsCollection *mongo.Collection) *UserModel
 	}
 }
 
+/////////////////////////// WORK WITH ITEMS ///////////////////////////////
+
+func (m *UserModel) AddItemToFavorites(usedId, itemId primitive.ObjectID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var item models.Item
+	if err := m.ItemsCollection.FindOne(ctx, bson.M{"_id": itemId}).Decode(&item); err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": usedId}
+	update := bson.M{
+		"$addToSet": bson.M{
+			"favorites": item,
+		},
+	}
+
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return result.ModifiedCount > 0, nil
+}
+
+func (m *UserModel) DeleteItemFromFavorites(userId, itemId primitive.ObjectID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": userId}
+	update := bson.M{"$pull": bson.M{"favorites": bson.M{"_id": itemId}}}
+
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return result.ModifiedCount > 0, nil
+}
+
 func (m *UserModel) AddItemToCart(userId, itemId primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -78,6 +119,7 @@ func (m *UserModel) DeleteItemFromCart(userId, itemId primitive.ObjectID) error 
 }
 
 // ////////////////////////////////////////////////////////////////////
+
 func (m *UserModel) IsEmailExists(email string) (bool, error) {
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
