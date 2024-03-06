@@ -27,8 +27,6 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId = r.URL.Query().Get(":userId")
-
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -78,8 +76,6 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusUnauthorized)
 		return
 	}
-
-	userId = r.URL.Query().Get(":userId")
 
 	var req struct {
 		ItemId string `json:"itemId"`

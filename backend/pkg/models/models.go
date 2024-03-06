@@ -20,6 +20,7 @@ type CartItem struct {
 	Item     Item `bson:"item"`
 	Quantity int  `bson:"quantity"`
 }
+
 type User struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	Email          string             `bson:"email"`
@@ -49,4 +50,16 @@ type Item struct {
 	Price      float64            `bson:"price"`
 	ItemName   string             `bson:"item_name"`
 	Photos     []string           `bson:"item_photos"`
+	Info       Info               `bson:"info"`
+	Option     Option             `bson:"option"`
+}
+
+type Info struct {
+	title   string `bson:"info_title"`
+	content string `bson:"info_content"`
+}
+
+type Option struct {
+	title   string   `bson:"option_title"`
+	options []string `bson:"option_options"`
 }
