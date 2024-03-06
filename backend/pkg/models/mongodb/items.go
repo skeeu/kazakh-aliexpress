@@ -149,12 +149,14 @@ func (m *ItemModel) GetItems(page, pageSize int) ([]*models.Item, error) {
 
 }
 
-func (m *ItemModel) SetItem(categories []*models.Category, price float64, name string, photos []string) error {
+func (m *ItemModel) SetItem(categories []*models.Category, price float64, name string, photos []string, infos []models.Info, options []models.Option) error {
 	insert := bson.M{
 		"categories": categories,
 		"price":      price,
 		"item_name":  name,
 		"photos":     photos,
+		"info":       infos,
+		"option":     options,
 	}
 
 	_, err := m.C.InsertOne(context.Background(), insert)
