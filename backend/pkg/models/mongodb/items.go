@@ -167,19 +167,10 @@ func (m *ItemModel) SetItem(categories []*models.Category, price float64, name s
 	return nil
 }
 
-func (m *ItemModel) AddReview(user_id string, item_id string, rating float64, comment string) error {
+func (m *ItemModel) AddReview(review *models.Review, item_id string) error {
 	obj_item_ID, err := primitive.ObjectIDFromHex(item_id)
 	if err != nil {
 		return err
-	}
-	obj_user_ID, err := primitive.ObjectIDFromHex(user_id)
-	if err != nil {
-		return err
-	}
-	review := &models.Review{
-		UserId:  obj_user_ID,
-		Rating:  rating,
-		Comment: comment,
 	}
 
 	filter := bson.M{"_id": obj_item_ID}
@@ -187,7 +178,6 @@ func (m *ItemModel) AddReview(user_id string, item_id string, rating float64, co
 	update := bson.M{
 		"$push": bson.M{"reviews": review},
 	}
-
 	_, err = m.C.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
