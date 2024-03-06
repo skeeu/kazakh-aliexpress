@@ -158,6 +158,38 @@ func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
 // /////////////////////// END OF FAVORITES LOGIC /////////////////////////////
 
 // /////////////////////// CART LOGIC /////////////////////////////
+
+func (app *application) showCart(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userId = r.URL.Query().Get(":userId")
+
+	items, err := app.users.GetCart(userOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(items)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
 func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("userID").(string)
 

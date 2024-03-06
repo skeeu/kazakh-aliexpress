@@ -90,6 +90,18 @@ func (m *UserModel) DeleteItemFromFavorites(userId, itemId primitive.ObjectID) (
 	return result.ModifiedCount > 0, nil
 }
 
+func (m *UserModel) GetCart(userId primitive.ObjectID) ([]models.CartItem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := m.C.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return user.Cart, nil
+}
+
 func (m *UserModel) AddItemToCart(userId, itemId primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -185,6 +197,7 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 			"hashedPassword": hashedPassword,
 			"created":        time.Now(),
 			"role":           "buyer",
+			"cart":           []interface{}{},
 		},
 	}
 	opts := options.Update().SetUpsert(true)
