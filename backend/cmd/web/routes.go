@@ -10,7 +10,7 @@ import (
 func (app *application) routes() http.Handler {
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:4000"},
+		AllowedOrigins:   []string{"http://localhost:4000", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Auth"},
 		AllowCredentials: true,
