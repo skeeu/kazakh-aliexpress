@@ -436,10 +436,12 @@ func (app *application) showItems(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Categories []string `json:"categories,omitempty"`
-		Price      float64  `json:"price"`
-		ItemName   string   `json:"item_name"`
-		Photos     []string `json:"item_photos"`
+		Categories []string        `json:"categories,omitempty"`
+		Price      float64         `json:"price"`
+		ItemName   string          `json:"item_name"`
+		Photos     []string        `json:"item_photos"`
+		Infos      []models.Info   `json:"info"`
+		Options    []models.Option `json:"option"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -451,6 +453,8 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		validation.Field(&req.Price, validation.Required),
 		validation.Field(&req.ItemName, validation.Required),
 		validation.Field(&req.Photos),
+		validation.Field(&req.Infos, validation.Required),
+		validation.Field(&req.Options, validation.Required),
 	)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -458,14 +462,14 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var categories []*models.Category
-	for _, category_id := range req.Categories {
-		c, err := app.categories.GetById(category_id)
+	for _, categoryId := range req.Categories {
+		c, err := app.categories.GetById(categoryId)
 		if err != nil {
 			app.serverError(w, err)
 		}
 		categories = append(categories, c)
 	}
-	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos)
+	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos, req.Infos, req.Options)
 	if err != nil {
 		app.serverError(w, err)
 	}

@@ -50,6 +50,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 
