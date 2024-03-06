@@ -44,7 +44,6 @@ type Category struct {
 	CategoryName string             `bson:"category_name"`
 }
 
-
 type Item struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty"`
 	Categories []Category         `bson:"categories,omitempty"`
@@ -52,8 +51,8 @@ type Item struct {
 	ItemName   string             `bson:"item_name"`
 	Photos     []string           `bson:"item_photos"`
 	Reviews    []Review           `bson:"reviews"`
-	Info       []Info               `bson:"info"`
-	Option     []Option             `bson:"option"`
+	Infos      []Info             `bson:"info"`
+	Options    []Option           `bson:"option"`
 }
 type Review struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty"`
@@ -62,13 +61,12 @@ type Review struct {
 	Comment string             `bson:"comment"`
 }
 
-
 type Info struct {
-	title   string `bson:"info_title"`
-	content string `bson:"info_content"`
+	Title   string `bson:"info_title"`
+	Content string `bson:"info_content"`
 }
 
 type Option struct {
-	title   string   `bson:"option_title"`
-	options []string `bson:"option_options"`
+	Title   string   `bson:"option_title"`
+	Options []string `bson:"option_options"`
 }
