@@ -27,8 +27,6 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId = r.URL.Query().Get(":userId")
-
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -79,8 +77,6 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId = r.URL.Query().Get(":userId")
-
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
@@ -102,7 +98,6 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Удаление товара из корзины
 	if err = app.users.DeleteItemFromCart(userOBJId, itemOBJId); err != nil {
 		app.serverError(w, err)
 		return
@@ -313,19 +308,18 @@ func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = app.otps.SignUpEmail(req.Email)
-	tokenString, err := app.generateJWTsignUp(req.Email)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
 func (app *application) signupCode(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Code string `json:"code"`
+		Code  string `json:"code"`
+		Email string `json:"email"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -334,19 +328,7 @@ func (app *application) signupCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		app.clientError(w, http.StatusUnauthorized)
-		return
-	}
-
-	email, err := app.getEmailFromSignUpToken(tokenString)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	isValid, err := app.otps.SignUpConfirmCode(email, req.Code)
+	isValid, err := app.otps.SignUpConfirmCode(req.Email, req.Code)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -365,6 +347,7 @@ func (app *application) signupFinish(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Name     string `json:"name"`
 		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -375,6 +358,7 @@ func (app *application) signupFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = validation.ValidateStruct(&req,
+		validation.Field(&req.Email, validation.Required, validation.Length(5, 100), is.Email),
 		validation.Field(&req.Name, validation.Required, validation.Length(2, 25), validation.Match(regexp.MustCompile("^[a-zA-Z]+$")).Error("letters only")),
 		validation.Field(&req.Password, validation.Required, validation.Length(5, 30)),
 	)
@@ -385,19 +369,19 @@ func (app *application) signupFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		app.clientError(w, http.StatusUnauthorized)
-		return
-	}
-
-	email, err := app.getEmailFromSignUpToken(tokenString)
+	verified, err := app.otps.IsEmailVerified(req.Email)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	err = app.users.SignUpComplete(email, req.Name, req.Password)
+	if !verified {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Email not verified"})
+		return
+	}
+
+	err = app.users.SignUpComplete(req.Email, req.Name, req.Password)
 	if err != nil {
 		app.serverError(w, err)
 		return
