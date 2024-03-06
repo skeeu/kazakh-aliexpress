@@ -236,6 +236,45 @@ func (app *application) showItems(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Categories []string `json:"categories,omitempty"`
+		Price      float64  `json:"price"`
+		ItemName   string   `json:"item_name"`
+		Photos     []string `json:"item_photos"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = validation.ValidateStruct(&req,
+		validation.Field(&req.Categories, validation.Required),
+		validation.Field(&req.Price, validation.Required),
+		validation.Field(&req.ItemName, validation.Required),
+		validation.Field(&req.Photos),
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	var categories []*models.Category
+	for _, category_id := range req.Categories {
+		c, err := app.categories.GetById(category_id)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		categories = append(categories, c)
+	}
+	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": `successfully added`})
+}
+
 ////////////////////////// AUTH LOGIC /////////////////////////////////
 
 func (app *application) signupEmail(w http.ResponseWriter, r *http.Request) {

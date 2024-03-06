@@ -77,3 +77,21 @@ func (m *CategoryModel) CategoryExistsById(category_id string) (bool, error) {
 	}
 	return count > 0, nil
 }
+
+func (m *CategoryModel) GetById(category_id string) (*models.Category, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objID, _ := primitive.ObjectIDFromHex(category_id)
+
+	var category models.Category
+	err := m.C.FindOne(ctx, bson.M{"_id": objID}).Decode(&category)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &category, nil
+}

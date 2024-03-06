@@ -83,3 +83,38 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// Role
+
+func (app *application) IsSeller(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		tokenString := r.Header.Get("X-Auth")
+		if tokenString == "" {
+			app.clientError(w, http.StatusUnauthorized)
+			return
+		}
+
+		claims := &AppClaims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte("s7Ndh+pPznbHbS*+9Pk8qGWhTzbpa@tw"), nil
+		})
+
+		if err != nil || !token.Valid {
+			app.clientError(w, http.StatusForbidden)
+			return
+		}
+
+		if claims.Role == "seller" {
+			ctx := context.WithValue(r.Context(), "userID", claims.UserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		} else {
+			app.clientError(w, http.StatusForbidden)
+			return
+		}
+	})
+
+}
