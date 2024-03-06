@@ -16,6 +16,10 @@ type OTP struct {
 	Expires time.Time `bson:"expires"`
 }
 
+type CartItem struct {
+	Item     Item `bson:"item"`
+	Quantity int  `bson:"quantity"`
+}
 type User struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	Email          string             `bson:"email"`
@@ -24,7 +28,7 @@ type User struct {
 	Created        time.Time          `bson:"created"`
 	Role           string             `bson:"role"`
 	OTP            OTP                `bson:"otp,omitempty"`
-	Cart           []Item             `bson:"cart"`
+	Cart           []CartItem         `bson:"cart,omitempty"`
 }
 
 type OTPs struct {
@@ -43,4 +47,5 @@ type Item struct {
 	Categories []Category         `bson:"categories,omitempty"`
 	Price      float64            `bson:"price"`
 	ItemName   string             `bson:"item_name"`
+	Photos     []string           `bson:"item_photos"`
 }

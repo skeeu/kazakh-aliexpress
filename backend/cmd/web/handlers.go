@@ -20,16 +20,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 // /////////////////////// CART LOGIC /////////////////////////////
 func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received addToCart request")
 	userId, ok := r.Context().Value("userID").(string)
-	log.Printf("UserID from context: %s", userId)
 
 	if !ok {
 		app.clientError(w, http.StatusUnauthorized)
 		return
 	}
 
-	//userId = r.URL.Query().Get(":userId")
+	userId = r.URL.Query().Get(":userId")
 
 	var req struct {
 		ItemId string `json:"itemId"`
@@ -52,16 +50,6 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := app.items.FindByID(itemOBJId)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			app.notFound(w)
-			return
-		}
-		app.serverError(w, err)
-		return
-	}
-
 	exists, err := app.items.ItemExists(itemOBJId)
 	if err != nil {
 		app.serverError(w, err)
@@ -73,7 +61,7 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = app.users.AddItemToCart(userOBJId, item); err != nil {
+	if err = app.users.AddItemToCart(userOBJId, itemOBJId); err != nil {
 		app.serverError(w, err)
 		return
 	}
@@ -81,6 +69,49 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Item added to cart"})
+}
+
+func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userId = r.URL.Query().Get(":userId")
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Удаление товара из корзины
+	if err = app.users.DeleteItemFromCart(userOBJId, itemOBJId); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Item removed from cart"})
+
 }
 
 ///////////////////////// END OF CART LOGIC /////////////////////////////

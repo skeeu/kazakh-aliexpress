@@ -13,17 +13,67 @@ import (
 )
 
 type UserModel struct {
-	C *mongo.Collection
+	C               *mongo.Collection
+	ItemsCollection *mongo.Collection
 }
 
-func NewUserModel(c *mongo.Collection) *UserModel {
-	return &UserModel{C: c}
+func NewUserModel(usersCollection, itemsCollection *mongo.Collection) *UserModel {
+	return &UserModel{
+		C:               usersCollection,
+		ItemsCollection: itemsCollection,
+	}
 }
 
-func (m *UserModel) AddItemToCart(userId primitive.ObjectID, item *models.Item) error {
-	filter := bson.M{"_id": userId}
-	update := bson.M{"$push": bson.M{"cart": item}}
-	_, err := m.C.UpdateOne(context.TODO(), filter, update)
+func (m *UserModel) AddItemToCart(userId, itemId primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var item models.Item
+	if err := m.ItemsCollection.FindOne(ctx, bson.M{"_id": itemId}).Decode(&item); err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": userId, "cart.item._id": itemId}
+	update := bson.M{"$inc": bson.M{"cart.$.quantity": 1}}
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		update = bson.M{
+			"$push": bson.M{
+				"cart": bson.M{
+					"item":     item,
+					"quantity": 1,
+				},
+			},
+		}
+		_, err = m.C.UpdateOne(ctx, bson.M{"_id": userId}, update)
+	}
+
+	return err
+}
+
+func (m *UserModel) DeleteItemFromCart(userId, itemId primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": userId, "cart.item._id": itemId, "cart.quantity": bson.M{"$gt": 1}}
+	update := bson.M{"$inc": bson.M{"cart.$.quantity": -1}}
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount > 0 {
+		return nil
+	}
+
+	filter = bson.M{"_id": userId, "cart.item._id": itemId}
+	update = bson.M{"$pull": bson.M{"cart": bson.M{"item._id": itemId}}}
+	_, err = m.C.UpdateOne(ctx, filter, update)
+
 	return err
 }
 
@@ -68,7 +118,6 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 			"hashedPassword": hashedPassword,
 			"created":        time.Now(),
 			"role":           "buyer",
-			"cart":           []interface{}{},
 		},
 	}
 	opts := options.Update().SetUpsert(true)
@@ -105,4 +154,3 @@ func (m *UserModel) Authenticate(email, password string) (string, string, error)
 
 	return result.ID.Hex(), result.Role, nil
 }
-

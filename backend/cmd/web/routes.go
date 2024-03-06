@@ -26,7 +26,9 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/categories", dynamicMiddleware.ThenFunc(app.showAllCategories))
 	mux.Get("/api/v1/categories/:name", dynamicMiddleware.ThenFunc(app.showCategory))
 	mux.Get("/api/v1/item/:itemId", dynamicMiddleware.ThenFunc(app.showItem))
-	mux.Post("/api/v1/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
+	mux.Post("/api/v1/cart/add/:userId", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
+	mux.Post("/api/v1/cart/remove/:userId", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromCart))
+
 	mux.Get("/api/v1/items", dynamicMiddleware.ThenFunc(app.showItems))
 
 	// registration
