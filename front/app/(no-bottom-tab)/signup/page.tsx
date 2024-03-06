@@ -3,9 +3,10 @@
 import InputContainer from '@/features/signup/components/InputContainer/InputContainer';
 import PageBackground from '@/features/signup/components/PageBackground/PageBackground';
 import { api } from '@/lib/api';
-import { Button, Flex, Highlight, TextInput } from '@mantine/core';
+import { Button, Flex, Highlight, Stack, TextInput } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface SignupPageProps {}
@@ -17,6 +18,7 @@ enum SignupStage {
 }
 
 const SignupPage: React.FC<SignupPageProps> = ({}) => {
+    const router = useRouter();
     const [signupStage, setSignupStage] = useState<SignupStage>(SignupStage.enterEmail);
 
     const form = useForm({
@@ -28,16 +30,19 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
         },
 
         validate: {
-            email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+            email: (value) => (value && /^\S+@\S+$/.test(value) ? null : 'Invalid email'),
             code: (value) => (value && value.length === 6 ? null : 'Invalid code'),
             password: (value) => (value && value.length === 6 ? null : 'Weak password'),
-            name: (value) => (value && value.length === 6 ? null : 'Invalid name'),
+            name: (value) =>
+                value
+                    ? value.length < 2 || value.length > 15
+                        ? 'Length must be between 2 and 15'
+                        : !/^[a-zA-Z]+$/.test(value)
+                          ? 'Name must contain letter only'
+                          : null
+                    : 'Please write your name',
         },
     });
-
-    const onSubmit = (props) => {
-        console.log(props);
-    };
 
     const processEmailStage = async () => {
         const error = form.validateField('email');
@@ -55,6 +60,14 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
             });
             setSignupStage(SignupStage.enterCode);
         } catch (e) {
+            const res = e.response;
+            if (res.status === 409) {
+                notifications.show({
+                    title: 'You`re already registered!',
+                    message: 'Login to your account! 🤥',
+                });
+                router.push('/login');
+            }
             console.log(e);
         }
     };
@@ -67,16 +80,42 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
 
         try {
             await api.post('/v1/signup/code', {
-                // email: form.values.email,
+                email: form.values.email,
                 code: form.values.code,
             });
-            // notifications.show({
-            //     title: 'Check your email!',
-            //     message: 'We`ve sent registration code to your email! 🤥',
-            // });
             setSignupStage(SignupStage.enterFullData);
         } catch (e) {
-            console.log(e);
+            const res = e.response;
+            if (res.status === 401) {
+                form.setFieldError('code', 'Invalid code');
+            }
+            console.log(res.status);
+            console.log(12313, e);
+        }
+    };
+    const processCodeFullDataStage = async () => {
+        const error = form.validate();
+        if (error.hasErrors) {
+            return;
+        }
+
+        try {
+            const res = await api.post('/v1/signup', {
+                name: form.values.name,
+                password: form.values.password,
+                email: form.values.email,
+                // code: form.values.code,
+            });
+            console.log('s', res);
+            notifications.show({
+                title: 'Congratulation!',
+                message: 'You sucessfully sign up! 🤥',
+            });
+            router.replace('/login');
+        } catch (e) {
+            const res = e.response;
+            console.log(res.status);
+            console.log(12313, e);
         }
     };
 
@@ -98,7 +137,7 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
     return (
         <PageBackground>
             <InputContainer>
-                <form onSubmit={form.onSubmit(onSubmit)}>
+                <form onSubmit={form.onSubmit(processCodeFullDataStage)}>
                     <Flex
                         direction="column"
                         gap={35}
@@ -158,20 +197,22 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
                                 direction="column"
                                 gap={35}
                             >
-                                <TextInput
-                                    label="Password"
-                                    placeholder="Enter your password"
-                                    {...form.getInputProps('password')}
-                                />
-                                <TextInput
-                                    label="Name"
-                                    placeholder="Alex"
-                                    {...form.getInputProps('name')}
-                                />
+                                <Stack gap={4}>
+                                    <TextInput
+                                        label="Name"
+                                        placeholder="Alex"
+                                        {...form.getInputProps('name')}
+                                    />
+                                    <TextInput
+                                        label="Password"
+                                        placeholder="Enter your password"
+                                        {...form.getInputProps('password')}
+                                    />
+                                </Stack>
                                 <Button
-                                    type="button"
+                                    type="submit"
                                     size="md"
-                                    onClick={() => console.log(form.values)}
+                                    // onClick={() => console.log(form.values)}
                                 >
                                     Create Account
                                 </Button>
