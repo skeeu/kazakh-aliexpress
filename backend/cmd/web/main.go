@@ -53,7 +53,7 @@ func main() {
 		infoLog:    infoLog,
 		errorLog:   errorLog,
 		otps:       mongoDB.NewOtpModel(db.Collection("otps")),
-		users:      mongoDB.NewUserModel(db.Collection("users")),
+		users:      mongoDB.NewUserModel(db.Collection("users"), db.Collection("items")),
 		categories: mongoDB.NewCategoryModel(db.Collection("categories")),
 		items:      mongoDB.NewItemModel(db.Collection("items")),
 	}
