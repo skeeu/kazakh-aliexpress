@@ -18,6 +18,114 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home page"))
 }
 
+// /////////////////////// FAVORITES LOGIC /////////////////////////////
+func (app *application) addToFav(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userId = r.URL.Query().Get(":userId")
+
+	exists, err := app.items.ItemExists(itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if !exists {
+		app.notFound(w)
+		return
+	}
+
+	added, err := app.users.AddItemToFavorites(userOBJId, itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if added {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item added to favorites"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item already in favorites"})
+	}
+}
+
+func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userId = r.URL.Query().Get(":userId")
+
+	deleted, err := app.users.DeleteItemFromFavorites(userOBJId, itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if deleted {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item removed from favorites"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"message": "No such item in favorites"})
+	}
+}
+
+// /////////////////////// END OF FAVORITES LOGIC /////////////////////////////
+
 // /////////////////////// CART LOGIC /////////////////////////////
 func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("userID").(string)
@@ -41,6 +149,8 @@ func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	userId = r.URL.Query().Get(":userId")
 
 	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
 	if err != nil {
@@ -91,6 +201,8 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+
+	userId = r.URL.Query().Get(":userId")
 
 	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
 	if err != nil {
