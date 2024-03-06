@@ -18,12 +18,210 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Home page"))
 }
 
+// /////////////////////// FAVORITES LOGIC /////////////////////////////
+
+func (app *application) showFavs(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	items, err := app.users.GetFavorites(userOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(items)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
+func (app *application) addToFav(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	exists, err := app.items.ItemExists(itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if !exists {
+		app.notFound(w)
+		return
+	}
+
+	added, err := app.users.AddItemToFavorites(userOBJId, itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if added {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item added to favorites"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item already in favorites"})
+	}
+}
+
+func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	var req struct {
+		ItemId string `json:"itemId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	itemIdURL := r.URL.Query().Get(":itemId")
+	if itemIdURL != req.ItemId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	deleted, err := app.users.DeleteItemFromFavorites(userOBJId, itemOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if deleted {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusAccepted)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Item removed from favorites"})
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"message": "No such item in favorites"})
+	}
+}
+
+// /////////////////////// END OF FAVORITES LOGIC /////////////////////////////
+
 // /////////////////////// CART LOGIC /////////////////////////////
+
+func (app *application) showCart(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("userID").(string)
+
+	if !ok {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	userOBJId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	items, err := app.users.GetCart(userOBJId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(items)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+}
+
 func (app *application) addToCart(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("userID").(string)
 
 	if !ok {
 		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
 		return
 	}
 
@@ -77,12 +275,24 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdURL := r.URL.Query().Get(":userId")
+	if userIdURL != userId {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
 	var req struct {
 		ItemId string `json:"itemId"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	itemIdURL := r.URL.Query().Get(":itemId")
+	if itemIdURL != req.ItemId {
+		app.clientError(w, http.StatusForbidden)
 		return
 	}
 
@@ -238,12 +448,12 @@ func (app *application) showItems(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Categories []string         `json:"categories,omitempty"`
-		Price      float64          `json:"price"`
-		ItemName   string           `json:"item_name"`
-		Photos     []string         `json:"item_photos"`
-		Info       []*models.Info   `json:"info"`
-		Options    []*models.Option `json:"options"`
+		Categories []string        `json:"categories,omitempty"`
+		Price      float64         `json:"price"`
+		ItemName   string          `json:"item_name"`
+		Photos     []string        `json:"item_photos"`
+		Infos      []models.Info   `json:"info"`
+		Options    []models.Option `json:"options"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -254,7 +464,9 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		validation.Field(&req.Categories, validation.Required),
 		validation.Field(&req.Price, validation.Required),
 		validation.Field(&req.ItemName, validation.Required),
-		validation.Field(&req.Info, validation.Required),
+		validation.Field(&req.Photos),
+		validation.Field(&req.Infos, validation.Required),
+		validation.Field(&req.Options, validation.Required),
 	)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -262,14 +474,15 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var categories []*models.Category
-	for _, category_id := range req.Categories {
-		c, err := app.categories.GetById(category_id)
+	for _, categoryId := range req.Categories {
+		c, err := app.categories.GetById(categoryId)
 		if err != nil {
 			app.serverError(w, err)
 		}
 		categories = append(categories, c)
 	}
-	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos, req.Info, req.Options)
+
+	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos, req.Infos, req.Options)
 	if err != nil {
 		app.serverError(w, err)
 	}

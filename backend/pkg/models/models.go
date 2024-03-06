@@ -29,6 +29,7 @@ type User struct {
 	Created        time.Time          `bson:"created"`
 	Role           string             `bson:"role"`
 	OTP            OTP                `bson:"otp,omitempty"`
+	Favorites      []Item             `bson:"favorites,omitempty"`
 	Cart           []CartItem         `bson:"cart,omitempty"`
 }
 
@@ -51,8 +52,8 @@ type Item struct {
 	ItemName   string             `bson:"item_name"`
 	Photos     []string           `bson:"item_photos"`
 	Reviews    []Review           `bson:"reviews"`
-	Info       []Info             `bson:"info"`
-	Option     []Option           `bson:"options"`
+	Infos      []Info             `bson:"info"`
+	Options    []Option           `bson:"options"`
 }
 type Review struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty"`
@@ -62,11 +63,11 @@ type Review struct {
 }
 
 type Info struct {
-	Title   string `json:"info_title"`
-	Content string `json:"info_content"`
+	Title   string `bson:"info_title"`
+	Content string `bson:"info_content"`
 }
 
 type Option struct {
-	Title   string   `json:"option_title"`
-	Options []string `json:"option_options"`
+	Title   string   `bson:"option_title"`
+	Options []string `bson:"option_options"`
 }

@@ -1,14 +1,25 @@
-import { ObjectId } from 'bson';
-
 export type Category = {
-    _id: ObjectId;
-    category_name: string;
+    ID: string;
+    CategoryName: string;
+};
+
+export type ItemOption = {
+    OptionTitle: string;
+    OptionOptions: string[];
 };
 
 export type Item = {
-    _id: ObjectId;
-    item_name: string;
-    price: number;
-    photos: string[];
-    categories: Category[];
+    ID: string;
+    ItemName: string;
+    Options: ItemOption[];
+    Price: number;
+    Photos: string[];
+    Categories: Category[];
+};
+
+export type JWTPayload = {
+    email: string;
+    exp: Date;
+    role: string;
+    userId: string;
 };

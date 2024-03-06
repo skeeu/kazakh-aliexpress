@@ -24,6 +24,84 @@ func NewUserModel(usersCollection, itemsCollection *mongo.Collection) *UserModel
 	}
 }
 
+// ///////////////////////// WORK WITH ITEMS ///////////////////////////////
+
+func (m *UserModel) GetFavorites(userId primitive.ObjectID) ([]*models.Item, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{"$match", bson.M{"_id": userId}}},
+		{{"$project", bson.M{"favorites": 1, "_id": 0}}},
+		{{"$unwind", "$favorites"}},
+		{{"$replaceRoot", bson.M{"newRoot": "$favorites"}}},
+	}
+
+	cursor, err := m.C.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var favorites []*models.Item
+	if err = cursor.All(ctx, &favorites); err != nil {
+		return nil, err
+	}
+
+	return favorites, nil
+}
+
+func (m *UserModel) AddItemToFavorites(usedId, itemId primitive.ObjectID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var item models.Item
+	if err := m.ItemsCollection.FindOne(ctx, bson.M{"_id": itemId}).Decode(&item); err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": usedId}
+	update := bson.M{
+		"$addToSet": bson.M{
+			"favorites": item,
+		},
+	}
+
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return result.ModifiedCount > 0, nil
+}
+
+func (m *UserModel) DeleteItemFromFavorites(userId, itemId primitive.ObjectID) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": userId}
+	update := bson.M{"$pull": bson.M{"favorites": bson.M{"_id": itemId}}}
+
+	result, err := m.C.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return false, err
+	}
+
+	return result.ModifiedCount > 0, nil
+}
+
+func (m *UserModel) GetCart(userId primitive.ObjectID) ([]models.CartItem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := m.C.FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return user.Cart, nil
+}
+
 func (m *UserModel) AddItemToCart(userId, itemId primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -78,6 +156,7 @@ func (m *UserModel) DeleteItemFromCart(userId, itemId primitive.ObjectID) error 
 }
 
 // ////////////////////////////////////////////////////////////////////
+
 func (m *UserModel) IsEmailExists(email string) (bool, error) {
 	var result models.User
 	err := m.C.FindOne(context.TODO(), bson.M{"email": email}).Decode(&result)
@@ -118,6 +197,7 @@ func (m *UserModel) SignUpComplete(email, name, password string) error {
 			"hashedPassword": hashedPassword,
 			"created":        time.Now(),
 			"role":           "buyer",
+			"cart":           []interface{}{},
 		},
 	}
 	opts := options.Update().SetUpsert(true)

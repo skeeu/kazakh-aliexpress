@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 export const NavigationButton: React.FC<IconProps> = ({ title, icon, to, active }) => {
     const Icon = icon;
+    const color = active ? '#005bff' : 'rgba(0,26,52,.6)';
+
     return (
         <Link
             href={to}
@@ -18,11 +20,10 @@ export const NavigationButton: React.FC<IconProps> = ({ title, icon, to, active 
             >
                 <Icon
                     size={22}
-                    color="rgba(0,26,52,.6)"
+                    color={color}
                 />
-                {/* {icon} */}
                 <Text
-                    c="rgba(0,26,52,.6)"
+                    c={color}
                     size="sm"
                     fw={600}
                     style={{ textDecoration: 'none' }}
