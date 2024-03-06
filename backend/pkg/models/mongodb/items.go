@@ -156,7 +156,7 @@ func (m *ItemModel) SetItem(categories []*models.Category, price float64, name s
 		"item_name":  name,
 		"photos":     photos,
 		"info":       infos,
-		"option":     options,
+		"options":    options,
 	}
 
 	_, err := m.C.InsertOne(context.Background(), insert)
