@@ -86,7 +86,7 @@ func (m *ItemModel) GetItemsByCategoryId(category_id string, page, pageSize int)
 }
 
 func (m *ItemModel) GetItem(id string) (*models.Item, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	objID, err := primitive.ObjectIDFromHex(id)
@@ -149,12 +149,14 @@ func (m *ItemModel) GetItems(page, pageSize int) ([]*models.Item, error) {
 
 }
 
-func (m *ItemModel) SetItem(categories []*models.Category, price float64, name string, photos []string) error {
+func (m *ItemModel) SetItem(categories []*models.Category, price float64, name string, photos []string, info []*models.Info, options []*models.Option) error {
 	insert := bson.M{
-		"categories": categories,
-		"price":      price,
-		"item_name":  name,
-		"photos":     photos,
+		"categories":  categories,
+		"price":       price,
+		"item_name":   name,
+		"item_photos": photos,
+		"info":        info,
+		"options":     options,
 	}
 
 	_, err := m.C.InsertOne(context.Background(), insert)
@@ -162,5 +164,33 @@ func (m *ItemModel) SetItem(categories []*models.Category, price float64, name s
 		return err
 	}
 
+	return nil
+}
+
+func (m *ItemModel) AddReview(user_id string, item_id string, rating float64, comment string) error {
+	obj_item_ID, err := primitive.ObjectIDFromHex(item_id)
+	if err != nil {
+		return err
+	}
+	obj_user_ID, err := primitive.ObjectIDFromHex(user_id)
+	if err != nil {
+		return err
+	}
+	review := &models.Review{
+		UserId:  obj_user_ID,
+		Rating:  rating,
+		Comment: comment,
+	}
+
+	filter := bson.M{"_id": obj_item_ID}
+
+	update := bson.M{
+		"$push": bson.M{"reviews": review},
+	}
+
+	_, err = m.C.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
 	return nil
 }

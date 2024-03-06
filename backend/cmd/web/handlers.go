@@ -238,10 +238,12 @@ func (app *application) showItems(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Categories []string `json:"categories,omitempty"`
-		Price      float64  `json:"price"`
-		ItemName   string   `json:"item_name"`
-		Photos     []string `json:"item_photos"`
+		Categories []string         `json:"categories,omitempty"`
+		Price      float64          `json:"price"`
+		ItemName   string           `json:"item_name"`
+		Photos     []string         `json:"item_photos"`
+		Info       []*models.Info   `json:"info"`
+		Options    []*models.Option `json:"options"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -252,7 +254,7 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		validation.Field(&req.Categories, validation.Required),
 		validation.Field(&req.Price, validation.Required),
 		validation.Field(&req.ItemName, validation.Required),
-		validation.Field(&req.Photos),
+		validation.Field(&req.Info, validation.Required),
 	)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -267,12 +269,37 @@ func (app *application) AddItem(w http.ResponseWriter, r *http.Request) {
 		}
 		categories = append(categories, c)
 	}
-	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos)
+	err = app.items.SetItem(categories, req.Price, req.ItemName, req.Photos, req.Info, req.Options)
 	if err != nil {
 		app.serverError(w, err)
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": `successfully added`})
+}
+
+////////////////////////// REVIEW /////////////////////////////////
+
+func (app *application) AddReview(w http.ResponseWriter, r *http.Request) {
+	itemId := r.URL.Query().Get(":itemId")
+	var req struct {
+		Rating  float64 `json:"rating"`
+		Comment string  `json:"comment"`
+	}
+	tokenString := r.Header.Get("X-Auth")
+
+	user_id, err := app.getDataFromToken(tokenString)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = app.items.AddReview(user_id, itemId, req.Rating, req.Comment)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": `successfully created`})
 }
 
 ////////////////////////// AUTH LOGIC /////////////////////////////////
