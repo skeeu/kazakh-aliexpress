@@ -59,7 +59,7 @@ const LoginPage: React.FC<LoginPageProps> = ({}) => {
                     <Stack gap={35}>
                         <Highlight
                             component="a"
-                            href="/"
+                            href="/home"
                             target="_blank"
                             fw={500}
                             size="xl"

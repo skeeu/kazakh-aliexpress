@@ -144,7 +144,7 @@ const SignupPage: React.FC<SignupPageProps> = ({}) => {
                     >
                         <Highlight
                             component="a"
-                            href="/"
+                            href="/home"
                             target="_blank"
                             fw={500}
                             size="xl"

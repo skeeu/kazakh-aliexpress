@@ -1,7 +1,7 @@
 'use client';
 
 import { Carousel } from '@mantine/carousel';
-import { Box, Group, Image, Stack, Text } from '@mantine/core';
+import { Box, Button, Group, Image, Stack, Text } from '@mantine/core';
 import { ItemProps } from './Item.types';
 import '@mantine/carousel/styles.css';
 import classes from './Item.module.css';
@@ -9,8 +9,9 @@ import { FaStar } from 'react-icons/fa';
 import { MdFavorite } from 'react-icons/md';
 import { api } from '@/lib/api';
 import { parseJwt } from '@/utils';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Item as ItemT } from '@/types';
 
 const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -22,9 +23,35 @@ const formatter = new Intl.NumberFormat('en-US', {
 const Item: React.FC<ItemProps> = ({ item }) => {
     const token = localStorage.getItem('token');
     const router = useRouter();
-    const [isFavorite, setIsFavorite] = useState(
-        localStorage.getItem('favorites') && JSON.parse(localStorage.getItem('favorites')).some((it) => it.ID === item.ID)
-    );
+    const [favorites, setFavorites] = useState(JSON.parse(localStorage.getItem('favorites') || '[]'));
+
+    const fetchFavorites = async (token: string) => {
+        const payload = parseJwt(token);
+        const res = await api.get(`/v1/users/${payload.userId}/favorites`, {
+            headers: {
+                'X-Auth': token,
+            },
+        });
+        setFavorites(res.data);
+    };
+
+    const addToCart = async (item: ItemT, token: string | null | undefined) => {
+        if (token) {
+            const payload = parseJwt(token);
+            const res = await api.patch(
+                `/v1/users/${payload.userId}/cart`,
+                {
+                    itemId: item.ID,
+                },
+                {
+                    headers: {
+                        'X-Auth': token,
+                    },
+                }
+            );
+            console.log(res);
+        }
+    };
 
     const onClickFavorite = async (token: string) => {
         const tokenPayload = parseJwt(token);
@@ -42,7 +69,7 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                 }
             );
             if (res.status === 202) {
-                setIsFavorite(true);
+                fetchFavorites(token);
             }
         } else {
             const res = await api.delete(`/v1/users/${tokenPayload.userId}/favorites/${item.ID}`, {
@@ -51,27 +78,17 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                 },
             });
             if (res.status === 202) {
-                setIsFavorite(false);
+                fetchFavorites(token);
             }
         }
     };
 
-    useEffect(() => {
-        if (!localStorage.getItem('favorites')) {
-            localStorage.setItem('favorites', JSON.stringify([]));
-        }
-
-        let favorites = JSON.parse(localStorage.getItem('favorites'));
-        if (!isFavorite) {
-            favorites = favorites.map((fav) => fav !== item.ID);
-        } else {
-            favorites.push(item);
-        }
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-    }, [isFavorite]);
-
     return (
-        <Stack onClick={() => router.push(`/item/${item.ID}`)}>
+        <Stack
+            onClick={() => router.push(`/item/${item.ID}`)}
+            justify="space-between"
+            gap={12}
+        >
             <Box pos="relative">
                 <Carousel
                     withIndicators
@@ -94,17 +111,20 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                         pos="absolute"
                         right={6}
                         top={6}
-                        style={{ zIndex: 1 }}
+                        style={{ zIndex: 10 }}
                         onClick={() => onClickFavorite(token)}
                     >
                         <MdFavorite
                             size={32}
-                            fill={isFavorite ? 'red' : '#3967a7'}
+                            fill={favorites.some((it) => it.ID === item.ID) ? 'red' : '#3967a7'}
                         />
                     </Box>
                 )}
             </Box>
-            <Stack gap={3}>
+            <Stack
+                gap={3}
+                mt={10}
+            >
                 <Text
                     fw={700}
                     lts={-1}
@@ -130,6 +150,14 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                         4.8
                     </Text>
                 </Group>
+                {token && (
+                    <Button
+                        fullWidth
+                        onClick={() => addToCart(item, token)}
+                    >
+                        Қоржынға
+                    </Button>
+                )}
             </Stack>
         </Stack>
     );
