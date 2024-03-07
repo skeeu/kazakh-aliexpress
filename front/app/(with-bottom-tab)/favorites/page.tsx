@@ -30,32 +30,6 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({}) => {
         if (token) {
             fetchFavorites(token);
         }
-        // db.items.insertOne({
-        //     price: 39012.84,
-        //     categories: [{ _id: '65e785681705cc6d2cca9687', category_name: 'phones' }],
-        //     item_name: 'Оригинальный смартфон 5G S26 Ultra, экран 7000 дюйма HD, 16 ГБ + 1 ТБ, мАч, 48 Мп + 72 МП, Android 13, Celulare, две Sim-карты, разблокирован',
-        //     item_photos: ['https://ae04.alicdn.com/kf/S2c400a1a8e6b4a8b9bf13e9420518476B.jpg_640x640.jpg_.webp',  'https://ae04.alicdn.com/kf/Scce5e9031e5d44498e68ee34a3c7d0fa4.jpg_.webp', 'https://ae04.alicdn.com/kf/S5faace3c9d894adbbf3ee650d13ad06eO.jpg_.webp'],
-        //     info: [
-        //         {
-        //             info_title: 'Название бренда',
-        //             info_content: 'OPUYYM',
-        //         },
-        //         {
-        //             info_title: 'Происхождение',
-        //             info_content: 'Китай',
-        //         },
-        //         {
-        //             info_title: 'Количество',
-        //             info_content: '1',
-        //         },
-        //     ],
-        //     options: [
-        //         {
-        //             option_title: 'Цвет',
-        //             option_options: ['Gold 16GB 1TB', 'Purple 16GB 1TB', 'Black 16GB 1TB'],
-        //         },
-        //     ],
-        // });
     }, []);
 
     useEffect(() => {

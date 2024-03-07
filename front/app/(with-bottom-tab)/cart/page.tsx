@@ -62,16 +62,17 @@ const CartPage: React.FC<CartPageProps> = ({}) => {
         }
         console.log(res);
     };
-    const decrement = async (token: string) => {
+
+    const decrement = async (item: Item, token: string) => {
         const payload = parseJwt(token);
-        const res = await api.delete(`/v1/users/${payload.userId}/cart`, {
+        const res = await api.delete(`/v1/users/${payload.userId}/cart/${item.ID}`, {
             headers: {
                 'X-Auth': token,
             },
         });
-        if (res.status === 200) {
-            setCart(res.data);
-            setSelected(res.data.map((i) => i.Item.ID));
+        if (res.status === 202) {
+            fetchCart(token);
+            handlersRef.current?.decrement();
         }
         console.log(res);
     };
@@ -111,6 +112,7 @@ const CartPage: React.FC<CartPageProps> = ({}) => {
                                 key={it.Item.ID}
                                 wrap="nowrap"
                                 align="flex-start"
+                                mb={32}
                             >
                                 <Group
                                     align="center"
@@ -144,7 +146,7 @@ const CartPage: React.FC<CartPageProps> = ({}) => {
                                         {it.Item.ItemName}
                                     </Text>
                                     <Group wrap="nowrap">
-                                        <ActionIcon onClick={() => handlersRef.current?.decrement()}>
+                                        <ActionIcon onClick={() => decrement(it.Item, token)}>
                                             <FaMinus />
                                         </ActionIcon>
                                         <NumberInput
@@ -154,7 +156,6 @@ const CartPage: React.FC<CartPageProps> = ({}) => {
                                             min={1}
                                             w="52px"
                                             value={it.Quantity}
-                                            // defaultValue={it.Quantity}
                                         />
                                         <ActionIcon onClick={() => incerement(it.Item, token)}>
                                             <FaPlus />
@@ -216,7 +217,9 @@ const CartPage: React.FC<CartPageProps> = ({}) => {
                         >
                             Воспользуйтесь поиском, чтобы найти всё, что нужно
                         </Text>
-                        <Button>Начать покупки</Button>
+                        <Link href={{ pathname: '/' }}>
+                            <Button>Начать покупки</Button>
+                        </Link>
                     </>
                 ) : (
                     <>

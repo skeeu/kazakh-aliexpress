@@ -130,19 +130,7 @@ func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		ItemId string `json:"itemId"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
 	itemIdURL := r.URL.Query().Get(":itemId")
-	if itemIdURL != req.ItemId {
-		app.clientError(w, http.StatusForbidden)
-		return
-	}
 
 	userOBJId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
@@ -150,7 +138,7 @@ func (app *application) deleteFromFav(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	itemOBJId, err := primitive.ObjectIDFromHex(itemIdURL)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -281,20 +269,7 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req struct {
-		ItemId string `json:"itemId"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
 	itemIdURL := r.URL.Query().Get(":itemId")
-	if itemIdURL != req.ItemId {
-		app.clientError(w, http.StatusForbidden)
-		return
-	}
 
 	userOBJId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
@@ -302,7 +277,7 @@ func (app *application) deleteFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	itemOBJId, err := primitive.ObjectIDFromHex(req.ItemId)
+	itemOBJId, err := primitive.ObjectIDFromHex(itemIdURL)
 	if err != nil {
 		app.serverError(w, err)
 		return

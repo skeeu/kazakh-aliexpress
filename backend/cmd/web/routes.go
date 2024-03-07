@@ -11,7 +11,7 @@ func (app *application) routes() http.Handler {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:4000", "http://localhost:3000"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Auth"},
 		AllowCredentials: true,
 		Debug:            true,
@@ -28,7 +28,6 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/item/:itemId", dynamicMiddleware.ThenFunc(app.showItem))
 	mux.Post("/api/v1/items/:itemId/reviews", dynamicMiddleware.ThenFunc(app.AddReview))
 
-
 	mux.Get("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.showCart))
 	mux.Patch("/api/v1/users/:userId/cart", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToCart))
 	mux.Del("/api/v1/users/:userId/cart/:itemId", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromCart))
@@ -36,7 +35,6 @@ func (app *application) routes() http.Handler {
 	mux.Get("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.showFavs))
 	mux.Post("/api/v1/users/:userId/favorites", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.addToFav))
 	mux.Del("/api/v1/users/:userId/favorites/:itemId", dynamicMiddleware.Append(app.authenticate).ThenFunc(app.deleteFromFav))
-
 
 	mux.Get("/api/v1/items", dynamicMiddleware.ThenFunc(app.showItems))
 	mux.Post("/api/v1/items/add", dynamicMiddleware.Append(app.IsSeller).ThenFunc(app.AddItem))

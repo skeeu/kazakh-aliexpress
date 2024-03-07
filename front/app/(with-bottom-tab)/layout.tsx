@@ -10,7 +10,7 @@ import { MdFavoriteBorder, MdPersonOutline } from 'react-icons/md';
 interface BottomTabLayoutProps {}
 
 const bottomTabs = [
-    { title: 'Басты', icon: AiOutlineHome, to: '/' },
+    { title: 'Басты', icon: AiOutlineHome, to: '/home' },
     { title: 'Санаттар', icon: AiOutlineUnorderedList, to: '/categories' },
     { title: 'Қоржын', icon: AiOutlineShoppingCart, to: '/cart' },
     { title: 'Таңдаулы', icon: MdFavoriteBorder, to: '/favorites' },
@@ -24,7 +24,7 @@ const BottomTabLayout: React.FC<PropsWithChildren<BottomTabLayoutProps>> = ({ ch
             bottomNavigation={
                 <BottonNavigation>
                     {bottomTabs.map((tab) => {
-                        const regex = new RegExp(`^${tab.to}$`);
+                        const regex = new RegExp(`^${tab.to}`);
                         const isActive = regex.test(pathname);
 
                         return (
