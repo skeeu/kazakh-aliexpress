@@ -29,6 +29,7 @@ const BottomTabLayout: React.FC<PropsWithChildren<BottomTabLayoutProps>> = ({ ch
 
                         return (
                             <NavigationButton
+                                key={tab.to}
                                 icon={tab.icon}
                                 to={tab.to}
                                 title={tab.title}

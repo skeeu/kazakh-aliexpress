@@ -4,8 +4,13 @@ export type Category = {
 };
 
 export type ItemOption = {
-    OptionTitle: string;
-    OptionOptions: string[];
+    Title: string;
+    Options: string[];
+};
+
+export type ItemInfo = {
+    Title: string;
+    Content: string;
 };
 
 export type Item = {
@@ -15,6 +20,7 @@ export type Item = {
     Price: number;
     Photos: string[];
     Categories: Category[];
+    Infos: ItemInfo[];
 };
 
 export type JWTPayload = {

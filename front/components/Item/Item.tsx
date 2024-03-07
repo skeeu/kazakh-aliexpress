@@ -1,3 +1,5 @@
+'use client';
+
 import { Carousel } from '@mantine/carousel';
 import { Box, Group, Image, Stack, Text } from '@mantine/core';
 import { ItemProps } from './Item.types';
@@ -7,38 +9,69 @@ import { FaStar } from 'react-icons/fa';
 import { MdFavorite } from 'react-icons/md';
 import { api } from '@/lib/api';
 import { parseJwt } from '@/utils';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'KZT',
-    // currencySign: '₸',
     currencyDisplay: 'symbol',
-    // These options are needed to round to whole numbers if that's what you want.
-    //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
-    maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
+    maximumFractionDigits: 0,
 });
 
 const Item: React.FC<ItemProps> = ({ item }) => {
     const token = localStorage.getItem('token');
+    const router = useRouter();
+    const [isFavorite, setIsFavorite] = useState(
+        localStorage.getItem('favorites') && JSON.parse(localStorage.getItem('favorites')).some((it) => it.ID === item.ID)
+    );
 
-    const addToFavorites = async (token: string) => {
+    const onClickFavorite = async (token: string) => {
         const tokenPayload = parseJwt(token);
-        const res = await api.post(
-            `/v1/users/${tokenPayload.userId}/favorites`,
-            {
-                itemId: item.ID,
-            },
-            {
+
+        if (!isFavorite) {
+            const res = await api.post(
+                `/v1/users/${tokenPayload.userId}/favorites`,
+                {
+                    itemId: item.ID,
+                },
+                {
+                    headers: {
+                        'X-Auth': token,
+                    },
+                }
+            );
+            if (res.status === 202) {
+                setIsFavorite(true);
+            }
+        } else {
+            const res = await api.delete(`/v1/users/${tokenPayload.userId}/favorites/${item.ID}`, {
                 headers: {
                     'X-Auth': token,
                 },
+            });
+            if (res.status === 202) {
+                setIsFavorite(false);
             }
-        );
-        console.log(res);
+        }
     };
 
+    useEffect(() => {
+        if (!localStorage.getItem('favorites')) {
+            localStorage.setItem('favorites', JSON.stringify([]));
+        }
+
+        let favorites = JSON.parse(localStorage.getItem('favorites'));
+        if (!isFavorite) {
+            favorites = favorites.map((fav) => fav !== item.ID);
+        } else {
+            favorites.push(item);
+        }
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+    }, [isFavorite]);
+
     return (
-        <Stack>
+        <Stack onClick={() => router.push(`/item/${item.ID}`)}>
             <Box pos="relative">
                 <Carousel
                     withIndicators
@@ -48,7 +81,7 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                     loop
                 >
                     {item.Photos.map((photo, i) => (
-                        <Carousel.Slide>
+                        <Carousel.Slide key={i}>
                             <Image
                                 src={photo}
                                 style={{ borderRadius: '16px' }}
@@ -62,11 +95,11 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                         right={6}
                         top={6}
                         style={{ zIndex: 1 }}
-                        onClick={() => addToFavorites(token)}
+                        onClick={() => onClickFavorite(token)}
                     >
                         <MdFavorite
                             size={32}
-                            fill="#3967a7"
+                            fill={isFavorite ? 'red' : '#3967a7'}
                         />
                     </Box>
                 )}
@@ -81,7 +114,6 @@ const Item: React.FC<ItemProps> = ({ item }) => {
                 <Text
                     fw={400}
                     style={{ fontSize: 14 }}
-                    // truncate
                     lineClamp={2}
                 >
                     {item.ItemName}
