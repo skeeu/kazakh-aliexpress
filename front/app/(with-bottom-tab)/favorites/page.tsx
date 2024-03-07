@@ -3,16 +3,17 @@
 import Page from '@/components/Page/Page';
 import { api } from '@/lib/api';
 import { parseJwt } from '@/utils';
-import { Button, Flex, Group, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Flex, Group, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { MdFavoriteBorder } from 'react-icons/md';
+import { MdFavorite } from 'react-icons/md';
 import { IoIosSearch } from 'react-icons/io';
+import Item from '@/components/Item/Item';
 
 interface FavoritesPageProps {}
 
 const FavoritesPage: React.FC<FavoritesPageProps> = ({}) => {
     const token = localStorage.getItem('token');
-    const [favorites, useSavorites] = useState();
+    const [favorites, setFavorites] = useState(undefined);
 
     const fetchFavorites = async (token: string) => {
         console.log(parseJwt(token).userId);
@@ -22,7 +23,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({}) => {
                 'X-Auth': token,
             },
         });
-        console.log(res);
+        setFavorites(res.data);
     };
 
     useEffect(() => {
@@ -57,6 +58,10 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({}) => {
         // });
     }, []);
 
+    useEffect(() => {
+        localStorage.setItem('favorites', JSON.stringify(favorites || []));
+    }, [favorites]);
+
     return (
         <Page
             headerOptions={{ height: 60 }}
@@ -77,18 +82,38 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({}) => {
                 </Flex>
             }
         >
-            <Stack align="center">
-                <Title size="md">В избранном пусто</Title>
-                <Group>
-                    <Text
-                        c="rgba(0, 26, 52, 0.6)"
-                        ta="center"
-                    >
-                        Добавляйте товары с помощью
-                    </Text>
-                    <MdFavoriteBorder />
-                </Group>
-            </Stack>
+            {favorites && favorites.length > 0 ? (
+                <SimpleGrid
+                    cols={{ base: 2, lg: 6 }}
+                    spacing="lg"
+                    px="md"
+                >
+                    {favorites.map((item) => {
+                        return (
+                            <Item
+                                key={item.ID}
+                                item={item}
+                            />
+                        );
+                    })}
+                </SimpleGrid>
+            ) : (
+                <Stack align="center">
+                    <Title size="md">В избранном пусто</Title>
+                    <Group gap={6}>
+                        <Text
+                            c="rgba(0, 26, 52, 0.6)"
+                            ta="center"
+                        >
+                            Добавляйте товары с помощью
+                        </Text>
+                        <MdFavorite
+                            size={32}
+                            fill={'#3967a7'}
+                        />
+                    </Group>
+                </Stack>
+            )}
         </Page>
     );
 };
